@@ -46,6 +46,8 @@ namespace JetDog.UserCollider
         public bool RemoteCollidersEnabled { get => _remoteCollidersEnabled; }
         [PublicAPI]
         public bool LocalCollidersEnabled { get => _localCollidersEnabled; }
+        [PublicAPI]
+        public AvatarArmatureColliderSystem LocalCollider { get => localCollider; }
 
         #endregion Properties
 
@@ -89,6 +91,52 @@ namespace JetDog.UserCollider
         public void ToggleVisualizerColliders()
         {
             VisualizeAllColliders(!visualizerIsOn);
+        }
+        [PublicAPI]
+        public void SetLocalColliderLayer(int layer)
+        {
+            localLayer = layer;
+            localCollider.ColliderLayer = layer;
+        }
+        [PublicAPI]
+        public void SetRemoteColliderLayer(int layer)
+        {
+            remoteLayer = layer;
+            for (int i = 0; i < UserIdList.Count; i++)
+            {
+                if (!colliderDictionary.TryGetValue(UserIdList[i], TokenType.Reference, out DataToken colliderSystemRef)) continue;
+
+                ((AvatarArmatureColliderSystem)colliderSystemRef.Reference).ColliderLayer = layer;
+            }
+        }
+        [PublicAPI]
+        public AvatarArmatureColliderSystem RemoteCollider(int playerId)
+        {
+            if (colliderDictionary.TryGetValue(new DataToken(playerId), TokenType.Reference, out DataToken colliderSystemRef))
+            {
+                return (AvatarArmatureColliderSystem)colliderSystemRef.Reference;
+            }
+            return null;
+        }
+        [PublicAPI]
+        public AvatarArmatureColliderSystem[] RemoteColliders()
+        {
+            var list = new AvatarArmatureColliderSystem[UserIdList.Count];
+            var j = 0;
+            for (int i = 0; i < UserIdList.Count; i++)
+            {
+                if (!colliderDictionary.TryGetValue(UserIdList[i], TokenType.Reference, out DataToken colliderSystemRef)) continue;
+
+                list[j] = (AvatarArmatureColliderSystem)colliderSystemRef.Reference;
+                j++;
+            }
+            if (j == list.Length)
+            {
+                return list;
+            }
+            var resizedList = new AvatarArmatureColliderSystem[j];
+            System.Array.Copy(list, resizedList, j);
+            return resizedList;
         }
         #endregion Public Methods
 
